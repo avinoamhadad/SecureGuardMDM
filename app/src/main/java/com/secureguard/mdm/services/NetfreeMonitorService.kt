@@ -148,17 +148,47 @@ class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
 
     private fun applyCurrentNetworkPolicy() {
         val preferredNetwork = determinePreferredNetwork()
-        if (preferredNetwork != null) {
-            showToast(getString(R.string.toast_netfree_check_success))
-        } else {
-            showToast(getString(R.string.toast_netfree_check_fail_blocking))
-        }
 
-        val vpnIntent = Intent(this, BlockerVpnService::class.java).apply {
-            action = BlockerVpnService.ACTION_UPDATE_POLICY
-            putExtra(BlockerVpnService.EXTRA_PREFERRED_NETWORK, preferredNetwork)
+        if (preferredNetwork != null) {
+            // --- רשת מאושרת נמצאה ---
+            showToast(getString(R.string.toast_netfree_check_success))
+            FileLogger.log(TAG, "Approved network found: $preferredNetwork. Disabling lockdown mode.")
+
+            try {
+                // 1. בטל את מצב הנעילה כדי לאפשר תעבורה מחוץ ל-VPN אם צריך
+                dpm.setAlwaysOnVpnPackage(adminComponentName, packageName, false)
+
+                // 2. הפעל את ה-VPN ואלץ אותו להשתמש ברשת המאושרת
+                val vpnIntent = Intent(this, BlockerVpnService::class.java).apply {
+                    action = BlockerVpnService.ACTION_UPDATE_POLICY
+                    putExtra(BlockerVpnService.EXTRA_PREFERRED_NETWORK, preferredNetwork)
+                }
+                ContextCompat.startForegroundService(this, vpnIntent)
+
+            } catch (e: Exception) {
+                FileLogger.log(TAG, "ERROR applying approved network policy: ${e.message}")
+            }
+
+        } else {
+            // --- לא נמצאה רשת מאושרת ---
+            showToast(getString(R.string.toast_netfree_check_fail_blocking))
+            FileLogger.log(TAG, "No approved network. Enabling lockdown mode to block all traffic.")
+
+            try {
+                // 1. זהו התיקון המרכזי: הפעל מצב נעילה מלא ברמת מערכת ההפעלה
+                dpm.setAlwaysOnVpnPackage(adminComponentName, packageName, true)
+
+                // 2. הפעל את שירות ה-VPN (למרות שמצב הנעילה עושה את רוב העבודה, זה מבטיח שהכל עקבי)
+                val vpnIntent = Intent(this, BlockerVpnService::class.java).apply {
+                    action = BlockerVpnService.ACTION_UPDATE_POLICY
+                    putExtra(BlockerVpnService.EXTRA_PREFERRED_NETWORK, null as Network?)
+                }
+                ContextCompat.startForegroundService(this, vpnIntent)
+
+            } catch (e: Exception) {
+                FileLogger.log(TAG, "ERROR applying blocking policy (lockdown): ${e.message}")
+            }
         }
-        ContextCompat.startForegroundService(this, vpnIntent)
     }
 
     private fun determinePreferredNetwork(): Network? {
