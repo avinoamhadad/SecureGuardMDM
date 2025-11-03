@@ -39,6 +39,7 @@
     <string name="dashboard_button_update_app">עדכון אפליקציה</string>
     <string name="dashboard_status_protected">מוגן</string>
     <string name="dashboard_status_unprotected">לא מוגן</string>
+    <string name="dashboard_button_about_app">אודות האפליקציה</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">ניהול הגדרות</string>
@@ -284,7 +285,28 @@
     <string name="feature_netfree_only_title">מצב נטפרי בלבד</string>
     <string name="feature_netfree_only_description">חוסם את כל תעבורת הרשת אם החיבור אינו מסונן על ידי נטפרי.</string>
     <string name="toast_netfree_check_started">רשת חדשה זוהתה, בודק סינון נטפרי...</string>
-    <string name="toast_netfree_check_success">הרשת מאושרת על ידי נטפרי. גלישה מאופשרת.</string>
+    <string name="toast_netfree_check_success">הרשת מאושרת על ידי נטפרי. הגלישה מאופשרת.</string>
     <string name="toast_netfree_check_fail_blocking">הרשת אינה מסוננת. האינטרנט נחסם.</string>
+
+    <!-- ### הוספה ועדכון של טקסטים ### -->
+    <string name="netfree_notification_channel_name">ניטור סינון נטפרי</string>
+    <string name="netfree_notification_channel_description">התראה המציינת שסינון נטפרי מנוטר ברקע.</string>
+    <string name="netfree_notification_content">מצב סינון נטפרי מנוטר ברקע.</string>
+    <string name="vpn_notification_channel_name">שירות חומת אש</string>
+    <string name="vpn_notification_channel_description">התראה המציינת ששירות חומת האש (VPN) פעיל.</string>
+    <string name="vpn_notification_content">שירות חומת האש פעיל.</string>
+    <string name="netfree_no_active_network">אין חיבור רשת פעיל.</string>
+    <string name="netfree_service_restarted">שירות ניטור נטפרי אותחל.</string>
+    <string name="netfree_recheck_triggered">מבצע בדיקה חוזרת...</string>
+
+    <string name="netfree_status_title">סטטוס סינון נטפרי</string>
+    <string name="netfree_status_verified">הרשת מסוננת</string>
+    <string name="netfree_status_verified_wifi">הרשת מסוננת (Wi-Fi)</string>
+    <string name="netfree_status_verified_cellular">הרשת מסוננת (נתונים סלולריים)</string>
+    <string name="netfree_status_not_verified_and_blocked">הרשת אינה מסוננת (האינטרנט חסום)</string>
+    <string name="netfree_status_checking">בודק סטטוס...</string>
+    <string name="netfree_status_service_inactive">השירות אינו פעיל</string>
+    <string name="netfree_button_recheck">בדיקה חוזרת</string>
+    <string name="netfree_button_restart_service">אתחול השירות</string>
 
 </resources>

@@ -3,6 +3,7 @@ package com.secureguard.mdm.di
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.ConnectivityManager
 import androidx.room.Room
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -56,6 +57,13 @@ object AppModule {
     @Singleton
     fun provideDevicePolicyManager(@ApplicationContext context: Context): DevicePolicyManager {
         return context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+    }
+
+    // --- הוספה: ספק עבור ConnectivityManager ---
+    @Provides
+    @Singleton
+    fun provideConnectivityManager(@ApplicationContext context: Context): ConnectivityManager {
+        return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     }
 
     @Provides

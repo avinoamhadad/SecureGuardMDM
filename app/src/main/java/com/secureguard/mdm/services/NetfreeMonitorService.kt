@@ -30,6 +30,9 @@ private const val TAG = "NetfreeMonitorService"
 private const val NOTIFICATION_CHANNEL_ID = "NetfreeMonitorChannel"
 private const val NOTIFICATION_ID = 1001
 
+// --- הוספת מבנה נתונים לייצוג הסטטוס ---
+data class NetfreeStatus(val isBlocked: Boolean, val approvedNetworkType: String?)
+
 class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
 
     private lateinit var networkWatcher: NetworkWatcher
@@ -45,13 +48,23 @@ class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
     companion object {
         const val ACTION_START_MONITORING = "ACTION_START_MONITORING"
         const val ACTION_STOP_MONITORING = "ACTION_STOP_MONITORING"
+        const val ACTION_FORCE_RECHECK = "ACTION_FORCE_RECHECK"
         private const val PREFS_NAME = "NetfreeServiceState"
         private const val KEY_IS_SERVICE_ACTIVE = "is_service_active"
+        // --- הוספת מפתחות חדשים לשמירת המצב ---
+        private const val KEY_IS_BLOCKED = "is_blocked"
+        private const val KEY_APPROVED_NETWORK_TYPE = "approved_network_type"
+
 
         fun setServiceActive(context: Context, isActive: Boolean) {
             FileLogger.log(TAG, "Setting service active state to: $isActive")
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit {
                 putBoolean(KEY_IS_SERVICE_ACTIVE, isActive)
+                // --- הוספה: איפוס המצב כשהשירות כבוי ---
+                if (!isActive) {
+                    remove(KEY_IS_BLOCKED)
+                    remove(KEY_APPROVED_NETWORK_TYPE)
+                }
             }
         }
 
@@ -59,7 +72,28 @@ class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
             return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 .getBoolean(KEY_IS_SERVICE_ACTIVE, false)
         }
+
+        // --- הוספה: פונקציה מרכזית לקריאת המצב ---
+        fun getNetfreeStatus(context: Context): NetfreeStatus {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val isBlocked = prefs.getBoolean(KEY_IS_BLOCKED, true) // Default to blocked if service is running but no state is set
+            val networkType = prefs.getString(KEY_APPROVED_NETWORK_TYPE, null)
+            return NetfreeStatus(isBlocked, networkType)
+        }
     }
+
+    // --- הוספה: פונקציה לשמירת המצב ---
+    private fun saveNetfreeStatus(isBlocked: Boolean, approvedNetworkType: String?) {
+        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit {
+            putBoolean(KEY_IS_BLOCKED, isBlocked)
+            if (approvedNetworkType != null) {
+                putString(KEY_APPROVED_NETWORK_TYPE, approvedNetworkType)
+            } else {
+                remove(KEY_APPROVED_NETWORK_TYPE)
+            }
+        }
+    }
+
 
     private fun showToast(message: String) {
         mainScope.launch { Toast.makeText(this@NetfreeMonitorService, message, Toast.LENGTH_LONG).show() }
@@ -100,9 +134,25 @@ class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
                 }
                 stopSelf()
             }
+            ACTION_FORCE_RECHECK -> {
+                FileLogger.log(TAG, "Received FORCE_RECHECK action.")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val activeNetwork = connectivityManager.activeNetwork
+                    if (activeNetwork != null) {
+                        onNetworkAvailable(activeNetwork)
+                    } else {
+                        showToast(getString(R.string.netfree_no_active_network))
+                        applyCurrentNetworkPolicy()
+                    }
+                } else {
+                    showToast(getString(R.string.netfree_no_active_network))
+                    applyCurrentNetworkPolicy()
+                }
+            }
         }
         return START_STICKY
     }
+
 
     override fun onNetworkAvailable(network: Network) {
         FileLogger.log(TAG, "Network available: $network. Performing check.")
@@ -147,18 +197,21 @@ class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
     }
 
     private fun applyCurrentNetworkPolicy() {
-        val preferredNetwork = determinePreferredNetwork()
+        val preferredNetworkEntry = determinePreferredNetwork()
 
-        if (preferredNetwork != null) {
-            // --- רשת מאושרת נמצאה ---
+        if (preferredNetworkEntry != null) {
+            val (preferredNetwork, networkType) = preferredNetworkEntry
+            val networkTypeName = if (networkType == NetworkCapabilities.TRANSPORT_WIFI) "Wi-Fi" else "Cellular"
+
             showToast(getString(R.string.toast_netfree_check_success))
-            FileLogger.log(TAG, "Approved network found: $preferredNetwork. Disabling lockdown mode.")
+            FileLogger.log(TAG, "Approved network found: $preferredNetwork ($networkTypeName). Disabling lockdown mode.")
+            saveNetfreeStatus(isBlocked = false, approvedNetworkType = networkTypeName)
 
             try {
-                // 1. בטל את מצב הנעילה כדי לאפשר תעבורה מחוץ ל-VPN אם צריך
-                dpm.setAlwaysOnVpnPackage(adminComponentName, packageName, false)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    dpm.setAlwaysOnVpnPackage(adminComponentName, packageName, false)
+                }
 
-                // 2. הפעל את ה-VPN ואלץ אותו להשתמש ברשת המאושרת
                 val vpnIntent = Intent(this, BlockerVpnService::class.java).apply {
                     action = BlockerVpnService.ACTION_UPDATE_POLICY
                     putExtra(BlockerVpnService.EXTRA_PREFERRED_NETWORK, preferredNetwork)
@@ -170,15 +223,14 @@ class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
             }
 
         } else {
-            // --- לא נמצאה רשת מאושרת ---
             showToast(getString(R.string.toast_netfree_check_fail_blocking))
             FileLogger.log(TAG, "No approved network. Enabling lockdown mode to block all traffic.")
+            saveNetfreeStatus(isBlocked = true, approvedNetworkType = null)
 
             try {
-                // 1. זהו התיקון המרכזי: הפעל מצב נעילה מלא ברמת מערכת ההפעלה
-                dpm.setAlwaysOnVpnPackage(adminComponentName, packageName, true)
-
-                // 2. הפעל את שירות ה-VPN (למרות שמצב הנעילה עושה את רוב העבודה, זה מבטיח שהכל עקבי)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    dpm.setAlwaysOnVpnPackage(adminComponentName, packageName, true)
+                }
                 val vpnIntent = Intent(this, BlockerVpnService::class.java).apply {
                     action = BlockerVpnService.ACTION_UPDATE_POLICY
                     putExtra(BlockerVpnService.EXTRA_PREFERRED_NETWORK, null as Network?)
@@ -191,22 +243,21 @@ class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
         }
     }
 
-    private fun determinePreferredNetwork(): Network? {
+    private fun determinePreferredNetwork(): Pair<Network, Int>? {
         if (approvedNetworks.isEmpty()) return null
 
-        val wifi = approvedNetworks.entries.find { it.value == NetworkCapabilities.TRANSPORT_WIFI }
-        if (wifi != null) {
-            FileLogger.log(TAG, "Determined preferred network: Wi-Fi ${wifi.key}")
-            return wifi.key
+        approvedNetworks.entries.find { it.value == NetworkCapabilities.TRANSPORT_WIFI }?.let {
+            FileLogger.log(TAG, "Determined preferred network: Wi-Fi ${it.key}")
+            return it.key to it.value
         }
 
-        val cellular = approvedNetworks.entries.find { it.value == NetworkCapabilities.TRANSPORT_CELLULAR }
-        if (cellular != null) {
-            FileLogger.log(TAG, "Determined preferred network: Cellular ${cellular.key}")
-            return cellular.key
+        approvedNetworks.entries.find { it.value == NetworkCapabilities.TRANSPORT_CELLULAR }?.let {
+            FileLogger.log(TAG, "Determined preferred network: Cellular ${it.key}")
+            return it.key to it.value
         }
         return null
     }
+
 
     private fun enablePersistentFirewall() {
         FileLogger.log(TAG, "Enabling persistent firewall (Always-On VPN).")
@@ -234,18 +285,18 @@ class NetfreeMonitorService : Service(), NetworkWatcher.NetworkStateListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
-                "Netfree Monitor Service",
-                NotificationManager.IMPORTANCE_DEFAULT
+                getString(R.string.netfree_notification_channel_name),
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "התראה קבועה המציינת שסינון נטפרי מנוטר ברקע."
+                description = getString(R.string.netfree_notification_channel_description)
             }
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("A Bloq")
-            .setContentText("מצב סינון נטפרי מנוטר ברקע.")
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText(getString(R.string.netfree_notification_content))
             .setSmallIcon(R.drawable.ic_netguard_shield)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .build()
     }

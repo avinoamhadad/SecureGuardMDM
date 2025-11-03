@@ -28,9 +28,8 @@ class BlockerVpnService : VpnService() {
         const val ACTION_UPDATE_POLICY = "ACTION_UPDATE_POLICY"
         const val EXTRA_PREFERRED_NETWORK = "EXTRA_PREFERRED_NETWORK"
 
-        // --- מיקום נכון של המשתנים ---
         private const val VPN_NOTIFICATION_CHANNEL_ID = "BlockerVpnChannel"
-        private const val VPN_NOTIFICATION_ID = 1002 // מספר שונה מהשירות השני
+        private const val VPN_NOTIFICATION_ID = 1002
     }
 
     override fun onCreate() {
@@ -39,7 +38,6 @@ class BlockerVpnService : VpnService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // --- קריאה להפעלת השירות במצב חזית ---
         startForeground(VPN_NOTIFICATION_ID, createNotification())
 
         when (intent?.action) {
@@ -115,23 +113,23 @@ class BlockerVpnService : VpnService() {
         }
     }
 
-    // --- הפונקציה ליצירת התראה ---
     private fun createNotification(): Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 VPN_NOTIFICATION_CHANNEL_ID,
-                "A Bloq VPN Service",
-                NotificationManager.IMPORTANCE_DEFAULT
+                getString(R.string.vpn_notification_channel_name),
+                // --- התיקון כאן ---
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "התראה קבועה המציינת שה-VPN של החסימה פעיל."
+                description = getString(R.string.vpn_notification_channel_description)
             }
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
         return NotificationCompat.Builder(this, VPN_NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("A Bloq")
-            .setContentText("שירות חומת האש פעיל.")
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText(getString(R.string.vpn_notification_content))
             .setSmallIcon(R.drawable.ic_netguard_shield)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_LOW) // --- התיקון כאן ---
             .setOngoing(true)
             .build()
     }
