@@ -65,9 +65,7 @@ object CategoryRegistry {
             features = listOf(
                 NetfreeOnlyModeFeature,
                 BlockInternetVpnFeature,
-                BlockVpnSettingsFeature,
-                InstallAndProtectNetGuardFeature,
-                ForceNetGuardVpnFeature
+                BlockVpnSettingsFeature
             )
         ),
         ProtectionCategory(

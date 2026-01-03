@@ -13,7 +13,9 @@ data class AppBlockerUiState(
     val isLoading: Boolean = true,
     val currentFilter: AppFilterType = AppFilterType.USER_ONLY,
     val searchQuery: String = "",
-    val selectionForUnblock: Set<String> = emptySet()
+    val selectionForUnblock: Set<String> = emptySet(),
+    val showCriticalAppsWarning: Boolean = false,
+    val criticalAppsDetected: List<AppInfo> = emptyList()
 )
 
 sealed class AppBlockerEvent {
@@ -25,4 +27,5 @@ sealed class AppBlockerEvent {
     data class OnToggleUnblockSelection(val packageName: String) : AppBlockerEvent()
     object OnUnblockSelectedRequest : AppBlockerEvent() // ישוחרר מיידית
     data class OnSearchQueryChanged(val query: String) : AppBlockerEvent()
+    object OnDismissCriticalAppsWarning : AppBlockerEvent()
 }

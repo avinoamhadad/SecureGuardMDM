@@ -116,6 +116,13 @@ fun AppSelectionScreen(
             }
         )
     }
+
+    if (uiState.showCriticalAppsWarning && uiState.criticalAppsDetected.isNotEmpty()) {
+        CriticalAppsWarningDialog(
+            criticalApps = uiState.criticalAppsDetected,
+            onDismiss = { viewModel.onEvent(AppBlockerEvent.OnDismissCriticalAppsWarning) }
+        )
+    }
 }
 
 @Composable
@@ -174,4 +181,37 @@ private fun AppSelectionRow(appInfo: AppInfo, onCheckedChange: (Boolean) -> Unit
         Spacer(modifier = Modifier.width(16.dp))
         Checkbox(checked = appInfo.isBlocked, onCheckedChange = { onCheckedChange(it) })
     }
+}
+
+@Composable
+private fun CriticalAppsWarningDialog(
+    criticalApps: List<AppInfo>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("אזהרה: אפליקציות חשובות") },
+        text = {
+            Column {
+                Text("המהלך צפוי לגרום למכשירך להרס בלתי הפיך, מכיוון שזאת אפליקציה חשובה מדי!")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("בקרוב יהיה אפשר לחסום גם את זה בבטחה!")
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("אפליקציות שנבחרו:", style = MaterialTheme.typography.titleSmall)
+                Spacer(modifier = Modifier.height(8.dp))
+                criticalApps.forEach { app ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(painter = rememberDrawablePainter(drawable = app.icon), contentDescription = null, modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(app.appName, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("הבנתי")
+            }
+        }
+    )
 }

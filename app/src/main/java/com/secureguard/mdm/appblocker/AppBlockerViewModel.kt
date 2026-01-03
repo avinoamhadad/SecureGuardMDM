@@ -31,6 +31,16 @@ import javax.inject.Inject
 
 private const val TAG = "AppBlockerViewModel"
 
+// Critical system apps that should not be blocked as they may cause device instability
+private val CRITICAL_SYSTEM_PACKAGES = setOf(
+    "com.android.settings",           // Settings app
+    "com.android.systemui",          // System UI
+    "android",                       // Android System
+    "com.google.android.gsf",         // Google Services Framework
+    "com.android.launcher3",          // Default launcher
+    "com.google.android.launcher",    // Google launcher
+)
+
 @HiltViewModel
 class AppBlockerViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -61,6 +71,7 @@ class AppBlockerViewModel @Inject constructor(
             is AppBlockerEvent.OnToggleUnblockSelection -> toggleUnblockSelection(event.packageName)
             is AppBlockerEvent.OnSearchQueryChanged -> onSearchQueryChanged(event.query)
             is AppBlockerEvent.OnDismissPasswordPrompt -> { /* No longer needed */ }
+            is AppBlockerEvent.OnDismissCriticalAppsWarning -> dismissCriticalAppsWarning()
         }
     }
 
@@ -182,6 +193,16 @@ class AppBlockerViewModel @Inject constructor(
                 return@launch
             }
 
+            // Check for critical system apps
+            val criticalApps = newlySelectedApps.filter { CRITICAL_SYSTEM_PACKAGES.contains(it) }
+            if (criticalApps.isNotEmpty()) {
+                val criticalAppInfos = allAppsMasterList.filter { criticalApps.contains(it.packageName) }
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(showCriticalAppsWarning = true, criticalAppsDetected = criticalAppInfos) }
+                }
+                return@launch
+            }
+
             settingsRepository.setBlockedAppPackages(finalBlockedSet)
             val appsToCache = allAppsMasterList.filter { finalBlockedSet.contains(it.packageName) && !oldBlockedSet.contains(it.packageName) }
             appsToCache.forEach { cacheAppInfo(it) }
@@ -230,6 +251,28 @@ class AppBlockerViewModel @Inject constructor(
 
     fun addPackageManually(packageName: String): String? {
         if (packageName.isBlank()) return "שם החבילה לא יכול להיות ריק."
+
+        // Check if it's a critical system app
+        if (CRITICAL_SYSTEM_PACKAGES.contains(packageName)) {
+            try {
+                val pm = context.packageManager
+                val appInfo = pm.getApplicationInfo(packageName, 0)
+                val criticalApp = AppInfo(
+                    appName = appInfo.loadLabel(pm).toString(),
+                    packageName = appInfo.packageName,
+                    icon = appInfo.loadIcon(pm),
+                    isBlocked = false,
+                    isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
+                    isLauncherApp = false,
+                    isInstalled = true
+                )
+                _uiState.update { it.copy(showCriticalAppsWarning = true, criticalAppsDetected = listOf(criticalApp)) }
+            } catch (e: PackageManager.NameNotFoundException) {
+                return "החבילה '$packageName' לא נמצאה במכשיר."
+            }
+            return null // Don't show error, show warning instead
+        }
+
         viewModelScope.launch {
             val currentlyBlockedPackages = settingsRepository.getBlockedAppPackages()
             allAppsMasterList = allAppsMasterList.map {
@@ -311,6 +354,16 @@ class AppBlockerViewModel @Inject constructor(
             Log.e(TAG, "Error saving icon to file for $packageName", e)
         }
         return null
+    }
+
+    private fun dismissCriticalAppsWarning() {
+        _uiState.update { it.copy(showCriticalAppsWarning = false, criticalAppsDetected = emptyList()) }
+        // Also reset the blocked selections for critical apps
+        val criticalPackages = CRITICAL_SYSTEM_PACKAGES
+        allAppsMasterList = allAppsMasterList.map {
+            if (criticalPackages.contains(it.packageName)) it.copy(isBlocked = false) else it
+        }
+        applyFilter()
     }
 
     private fun loadIconFromFile(path: String): Drawable? = Drawable.createFromPath(path)

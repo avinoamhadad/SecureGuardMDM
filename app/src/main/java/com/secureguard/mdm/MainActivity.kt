@@ -82,10 +82,14 @@ class MainActivity : ComponentActivity() {
 
             requestSpecialUsePermission()
 
+            // Check for NetGuard upgrade scenario
+            val shouldShowNetGuardDialog = checkForNetGuardUpgrade()
+
             setContent {
                 SecureGuardTheme {
                     // --- NEW: State to control the dialog visibility ---
                     var showWriteSettingsDialog by remember { mutableStateOf(false) }
+                    var showNetGuardDialog by remember { mutableStateOf(shouldShowNetGuardDialog) }
 
                     // --- NEW: Check for permission and update state ---
                     LaunchedEffect(Unit) {
@@ -116,6 +120,16 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+
+                        if (showNetGuardDialog) {
+                            NetGuardUpgradeDialog(
+                                onDismiss = { showNetGuardDialog = false },
+                                onUninstall = {
+                                    showNetGuardDialog = false
+                                    uninstallNetGuard()
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -136,6 +150,51 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun checkForNetGuardUpgrade(): Boolean {
+        // Check if NetGuard is installed and was previously protected
+        val netGuardPackage = "eu.faircode.netguard"
+        val isNetGuardInstalled = try {
+            packageManager.getPackageInfo(netGuardPackage, 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+
+        if (isNetGuardInstalled) {
+            // Remove protection first (as per requirements)
+            val adminComponentName = SecureGuardDeviceAdminReceiver.getComponentName(this)
+            try {
+                dpm.setUninstallBlocked(adminComponentName, netGuardPackage, false)
+                Log.d("MainActivity", "Removed NetGuard uninstall protection")
+            } catch (e: Exception) {
+                Log.w("MainActivity", "Failed to remove NetGuard protection", e)
+            }
+
+            return true // Show dialog
+        }
+        return false // Don't show dialog
+    }
+
+    private fun uninstallNetGuard() {
+        val netGuardPackage = "eu.faircode.netguard"
+        val adminComponentName = SecureGuardDeviceAdminReceiver.getComponentName(this)
+
+        lifecycleScope.launch {
+            try {
+                // Use MDM to uninstall NetGuard
+                dpm.setUninstallBlocked(adminComponentName, netGuardPackage, false)
+                val intent = Intent(Intent.ACTION_UNINSTALL_PACKAGE).apply {
+                    data = Uri.parse("package:$netGuardPackage")
+                    putExtra(Intent.EXTRA_RETURN_RESULT, true)
+                }
+                startActivity(intent)
+                Log.d("MainActivity", "Initiated NetGuard uninstall")
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to uninstall NetGuard", e)
+            }
+        }
+    }
 }
 
 // --- NEW: Composable function for the permission dialog ---
@@ -153,6 +212,28 @@ private fun WriteSettingsPermissionDialog(onDismiss: () -> Unit, onConfirm: () -
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("לא עכשיו")
+            }
+        }
+    )
+}
+
+// --- NEW: Composable function for the NetGuard upgrade dialog ---
+@Composable
+private fun NetGuardUpgradeDialog(onDismiss: () -> Unit, onUninstall: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("NetGuard אינו בטוח כרגע") },
+        text = {
+            Text("נטגארד אינו בטוח כרגע, והאבטחה עליו תוסר.\n\nהאם ברצונך להסיר גם את נטגארד עצמו על הדרך?")
+        },
+        confirmButton = {
+            Button(onClick = onUninstall) {
+                Text("הסר את NetGuard")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("השאר את NetGuard")
             }
         }
     )
