@@ -111,6 +111,14 @@ class SettingsRepositoryImpl @Inject constructor(
         preferencesManager.saveBoolean(PreferencesManager.KEY_SHOW_BOOT_TOAST, isEnabled)
     }
 
+    override suspend fun isLauncherIconHidden(): Boolean = withContext(Dispatchers.IO) {
+        preferencesManager.loadBoolean(PreferencesManager.KEY_HIDE_LAUNCHER_ICON, false)
+    }
+
+    override suspend fun setLauncherIconHidden(isHidden: Boolean) = withContext(Dispatchers.IO) {
+        preferencesManager.saveBoolean(PreferencesManager.KEY_HIDE_LAUNCHER_ICON, isHidden)
+    }
+
 
     override suspend fun getCustomFrpIds(): Set<String> = withContext(Dispatchers.IO) {
         preferencesManager.loadStringSet(PreferencesManager.KEY_CUSTOM_FRP_IDS, emptySet())

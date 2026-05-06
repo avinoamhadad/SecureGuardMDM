@@ -581,4 +581,12 @@
     <!-- Logs Screen -->
     <string name="logs_title">Event Log</string>
     <string name="settings_navigate_logs">Go to Logs</string>
+
+    <!-- Hide launcher icon -->
+    <string name="settings_item_hide_launcher_icon">Hide app icon from drawer</string>
+    <string name="hide_launcher_dialog_title">Hide app icon</string>
+    <string name="hide_launcher_dialog_message">The icon will be hidden from the device app drawer.\n\nTo reopen the app you can:\n• Open Kiosk → password → Management\n• Android Settings → Apps → A Bloq → Open\n• Dial the secret code: *#*#1818#*#*\n• ADB: am start -n com.secureguard.mdm/.MainActivity\n\nContinue?</string>
+    <string name="hide_launcher_dialog_confirm">Hide</string>
+    <string name="hide_launcher_snackbar_hidden">Icon hidden. Reopen via *#*#1818#*#* or Kiosk.</string>
+    <string name="hide_launcher_snackbar_shown">The icon will be restored in the app drawer.</string>
 </resources>

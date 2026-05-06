@@ -60,5 +60,8 @@ class PreferencesManager @Inject constructor(internal val prefs: SharedPreferenc
         const val KEY_ASTORE_SAVE_TO_DOWNLOADS = "astore_save_to_downloads"
         const val KEY_ASTORE_AUTO_INSTALL = "astore_auto_install"
         const val KEY_ASTORE_PREVENT_DOUBLE_TAP = "astore_prevent_double_tap"
+
+        // --- Hide launcher icon ---
+        const val KEY_HIDE_LAUNCHER_ICON = "hide_launcher_icon"
     }
 }

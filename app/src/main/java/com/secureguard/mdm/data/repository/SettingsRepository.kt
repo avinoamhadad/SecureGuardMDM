@@ -31,6 +31,10 @@ interface SettingsRepository {
     suspend fun isShowBootToastEnabled(): Boolean
     suspend fun setShowBootToastEnabled(isEnabled: Boolean)
 
+    // --- Hide launcher icon ---
+    suspend fun isLauncherIconHidden(): Boolean
+    suspend fun setLauncherIconHidden(isHidden: Boolean)
+
 
     // --- פעולות FRP ---
     suspend fun getCustomFrpIds(): Set<String>

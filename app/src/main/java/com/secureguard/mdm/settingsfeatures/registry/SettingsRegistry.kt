@@ -22,6 +22,7 @@ object SettingsRegistry {
         ToggleUiControlTypeSetting,
         ToggleContactEmailSetting,
         ShowBootToastSetting,
+        HideLauncherIconSetting,
 
         // קטגוריית פעולות מתקדמות
         UpdateChannelAction,

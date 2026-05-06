@@ -682,4 +682,12 @@
     <!-- Logs Screen -->
     <string name="logs_title">יומן אירועים</string>
     <string name="settings_navigate_logs">מעבר ליומן</string>
+
+    <!-- Hide launcher icon -->
+    <string name="settings_item_hide_launcher_icon">הסתר אייקון ממגירת היישומים</string>
+    <string name="hide_launcher_dialog_title">הסתרת האייקון</string>
+    <string name="hide_launcher_dialog_message">האייקון יוסתר ממגירת היישומים של המכשיר.\n\nכדי לחזור לאפליקציה תוכל:\n• לפתוח את הקיוסק → סיסמה → ניהול\n• הגדרות אנדרואיד → אפליקציות → A Bloq → פתיחה\n• לחייג בקוד הסודי: *#*#1818#*#*\n• ADB: am start -n com.secureguard.mdm/.MainActivity\n\nלהמשיך?</string>
+    <string name="hide_launcher_dialog_confirm">הסתר</string>
+    <string name="hide_launcher_snackbar_hidden">האייקון הוסתר. חזרה דרך *#*#1818#*#* או דרך הקיוסק.</string>
+    <string name="hide_launcher_snackbar_shown">האייקון יחזור להופיע במגירת היישומים.</string>
 </resources>

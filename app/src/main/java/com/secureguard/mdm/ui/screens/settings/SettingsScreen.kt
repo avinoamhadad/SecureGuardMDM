@@ -33,6 +33,7 @@ import com.secureguard.mdm.settingsfeatures.impl.NavigateToKioskModeSetting
 import com.secureguard.mdm.settingsfeatures.impl.LockSettingsAction
 import com.secureguard.mdm.settingsfeatures.impl.RemovalOptionsAction
 import com.secureguard.mdm.settingsfeatures.impl.UpdateChannelAction
+import com.secureguard.mdm.settingsfeatures.impl.HideLauncherIconSetting
 import com.secureguard.mdm.settingsfeatures.impl.ExportSettingsAction
 import com.secureguard.mdm.ui.components.InfoDialog
 import com.secureguard.mdm.ui.components.PasswordPromptDialog
@@ -161,8 +162,12 @@ fun SettingsScreen(
                         )
                     }
                     items(items = items, key = { it.feature.id }) { itemModel ->
-                        SettingsItemRenderer(uiState, itemModel, onNavigateTo, viewModel) {
-                            // No special action
+                        if (itemModel.feature.id == HideLauncherIconSetting.id) {
+                            HideLauncherIconRow(itemModel = itemModel, viewModel = viewModel)
+                        } else {
+                            SettingsItemRenderer(uiState, itemModel, onNavigateTo, viewModel) {
+                                // No special action
+                            }
                         }
                     }
                 }
@@ -780,6 +785,55 @@ private fun UpdateChannelDialog(
             title = stringResource(R.string.update_channel_explanation_title),
             message = stringResource(R.string.update_channel_explanation_message),
             onDismiss = { showExplanationDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun HideLauncherIconRow(
+    itemModel: SettingItemModel,
+    viewModel: SettingsViewModel
+) {
+    var showWarning by remember { mutableStateOf(false) }
+    val title = stringResource(id = itemModel.feature.titleRes)
+
+    SettingsToggleItem(
+        title = title,
+        isChecked = itemModel.isChecked,
+        onCheckedChange = { newValue ->
+            if (newValue && !itemModel.isChecked) {
+                // User wants to enable: confirm first.
+                showWarning = true
+            } else {
+                viewModel.onEvent(SettingsEvent.OnToggleSettingChanged(itemModel.feature.id, newValue))
+            }
+        },
+        useCheckbox = false,
+        iconRes = itemModel.feature.iconRes,
+        isEnabled = itemModel.isSupported
+    )
+
+    if (showWarning) {
+        AlertDialog(
+            onDismissRequest = { showWarning = false },
+            title = { Text(stringResource(id = R.string.hide_launcher_dialog_title)) },
+            text = { Text(stringResource(id = R.string.hide_launcher_dialog_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showWarning = false
+                        viewModel.onEvent(SettingsEvent.OnToggleSettingChanged(itemModel.feature.id, true))
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(stringResource(id = R.string.hide_launcher_dialog_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showWarning = false }) {
+                    Text(stringResource(id = R.string.dialog_button_cancel))
+                }
+            }
         )
     }
 }

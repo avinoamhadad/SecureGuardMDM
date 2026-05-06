@@ -46,9 +46,24 @@
             android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Launcher icon alias: hidden from drawer when disabled via Settings.
+             MainActivity itself remains launchable (App Info > Open, ADB, secret dial code). -->
+        <activity-alias
+            android:name=".LauncherAlias"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <activity
             android:name=".kiosk.ui.KioskActivity"
@@ -121,6 +136,18 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="com.secureguard.mdm.ACTION_APPLY_PRESET" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Secret dial code receiver: dial *#*#1818#*#* to launch MainActivity
+             even when the launcher icon is hidden. -->
+        <receiver
+            android:name=".receivers.SecretDialReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <action android:name="android.telephony.action.SECRET_CODE" />
+                <data android:scheme="android_secret_code" android:host="1818" />
             </intent-filter>
         </receiver>
 

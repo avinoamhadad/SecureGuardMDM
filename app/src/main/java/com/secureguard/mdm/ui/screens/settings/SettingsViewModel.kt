@@ -179,6 +179,7 @@ class SettingsViewModel @Inject constructor(
                         ToggleUpdatesSetting.id -> settingsRepository.areAllUpdatesDisabled()
                         ShowBootToastSetting.id -> settingsRepository.isShowBootToastEnabled()
                         AstoreToggleSetting.id -> settingsRepository.isAstoreEnabled()
+                        HideLauncherIconSetting.id -> settingsRepository.isLauncherIconHidden()
                         else -> false
                     }
                 } else false
@@ -247,6 +248,15 @@ class SettingsViewModel @Inject constructor(
                             ToggleUpdatesSetting.id -> settingsRepository.setAllUpdatesDisabled(model.isChecked)
                             ShowBootToastSetting.id -> settingsRepository.setShowBootToastEnabled(model.isChecked) // <-- SAVE the new state
                             AstoreToggleSetting.id -> settingsRepository.setAstoreEnabled(model.isChecked)
+                            HideLauncherIconSetting.id -> {
+                                settingsRepository.setLauncherIconHidden(model.isChecked)
+                                applyLauncherIconVisibility(model.isChecked)
+                                snackbarMessage = if (model.isChecked) {
+                                    context.getString(R.string.hide_launcher_snackbar_hidden)
+                                } else {
+                                    context.getString(R.string.hide_launcher_snackbar_shown)
+                                }
+                            }
                         }
                     }
                 }
@@ -527,6 +537,26 @@ class SettingsViewModel @Inject constructor(
 
     private fun showErrorDialog(title: String, message: String) {
         _errorDialogState.update { ErrorDialogState(isVisible = true, title = title, message = message) }
+    }
+
+    /**
+     * Toggles the LauncherAlias component to show/hide the app icon in the device's app drawer.
+     * MainActivity itself is left enabled so the app remains reachable via the secret dial code,
+     * Kiosk password dialog, App Info > Open, or ADB.
+     */
+    private fun applyLauncherIconVisibility(hidden: Boolean) {
+        try {
+            val pm = context.packageManager
+            val alias = ComponentName(context.packageName, "${context.packageName}.LauncherAlias")
+            val newState = if (hidden) {
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+            } else {
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            }
+            pm.setComponentEnabledSetting(alias, newState, PackageManager.DONT_KILL_APP)
+        } catch (t: Throwable) {
+            com.secureguard.mdm.utils.AppLogger.w("SettingsVM", "Failed to toggle launcher alias", t)
+        }
     }
 
     private fun isNetGuardInstalled(): Boolean {
