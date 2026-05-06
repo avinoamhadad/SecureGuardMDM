@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local-only / development notes (not pushed to GitHub)
+CLAUDE.md
+.claude/
+*.local.md
+build_output.txt
+test_permissions.md
