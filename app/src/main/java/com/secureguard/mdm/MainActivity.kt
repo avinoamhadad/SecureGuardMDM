@@ -79,7 +79,20 @@ class MainActivity : ComponentActivity() {
             }
 
             if (!secureUpdateHelper.coreComponentExists()) {
-                throw RuntimeException("Core validation component is missing or corrupted. Halting execution.")
+                AppLogger.e("MainActivity", "Core validation component missing or corrupted; showing recovery dialog.")
+                showCoreCorruptedDialog()
+                return@launch
+            }
+
+            // Re-sync the launcher icon visibility with the saved preference. Some
+            // OEM updates / restores reset component enabled state after install.
+            try {
+                com.secureguard.mdm.utils.LauncherIconHelper.setHidden(
+                    this@MainActivity,
+                    settingsRepository.isLauncherIconHidden()
+                )
+            } catch (t: Throwable) {
+                AppLogger.w("MainActivity", "Failed to sync launcher alias state", t)
             }
 
             requestSpecialUsePermission()
@@ -183,6 +196,28 @@ class MainActivity : ComponentActivity() {
             return true // Show dialog
         }
         return false // Don't show dialog
+    }
+
+    private fun showCoreCorruptedDialog() {
+        setContent {
+            SecureGuardTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AlertDialog(
+                        onDismissRequest = { finish() },
+                        title = { Text(stringResource(id = R.string.core_corrupted_title)) },
+                        text = { Text(stringResource(id = R.string.core_corrupted_message)) },
+                        confirmButton = {
+                            Button(onClick = { finish() }) {
+                                Text(stringResource(id = R.string.dialog_button_confirm))
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 
     private fun uninstallNetGuard() {

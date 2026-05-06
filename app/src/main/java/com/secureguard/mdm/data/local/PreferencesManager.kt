@@ -15,6 +15,8 @@ class PreferencesManager @Inject constructor(internal val prefs: SharedPreferenc
     fun loadStringSet(key: String, defaultValue: Set<String>): Set<String> = prefs.getStringSet(key, defaultValue) ?: defaultValue
     fun saveInt(key: String, value: Int) = prefs.edit().putInt(key, value).apply()
     fun loadInt(key: String, defaultValue: Int): Int = prefs.getInt(key, defaultValue)
+    fun saveLong(key: String, value: Long) = prefs.edit().putLong(key, value).apply()
+    fun loadLong(key: String, defaultValue: Long): Long = prefs.getLong(key, defaultValue)
 
 
     companion object {
@@ -63,5 +65,9 @@ class PreferencesManager @Inject constructor(internal val prefs: SharedPreferenc
 
         // --- Hide launcher icon ---
         const val KEY_HIDE_LAUNCHER_ICON = "hide_launcher_icon"
+
+        // --- Password lockout (anti brute-force) ---
+        const val KEY_PASSWORD_FAILED_ATTEMPTS = "password_failed_attempts"
+        const val KEY_PASSWORD_LAST_FAILURE_AT = "password_last_failure_at"
     }
 }

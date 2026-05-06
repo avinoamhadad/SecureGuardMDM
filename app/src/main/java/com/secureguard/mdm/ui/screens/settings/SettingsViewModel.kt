@@ -545,18 +545,7 @@ class SettingsViewModel @Inject constructor(
      * Kiosk password dialog, App Info > Open, or ADB.
      */
     private fun applyLauncherIconVisibility(hidden: Boolean) {
-        try {
-            val pm = context.packageManager
-            val alias = ComponentName(context.packageName, "${context.packageName}.LauncherAlias")
-            val newState = if (hidden) {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-            } else {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            }
-            pm.setComponentEnabledSetting(alias, newState, PackageManager.DONT_KILL_APP)
-        } catch (t: Throwable) {
-            com.secureguard.mdm.utils.AppLogger.w("SettingsVM", "Failed to toggle launcher alias", t)
-        }
+        com.secureguard.mdm.utils.LauncherIconHelper.setHidden(context, hidden)
     }
 
     private fun isNetGuardInstalled(): Boolean {

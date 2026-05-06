@@ -690,4 +690,11 @@
     <string name="hide_launcher_dialog_confirm">הסתר</string>
     <string name="hide_launcher_snackbar_hidden">האייקון הוסתר. חזרה דרך *#*#1818#*#* או דרך הקיוסק.</string>
     <string name="hide_launcher_snackbar_shown">האייקון יחזור להופיע במגירת היישומים.</string>
+
+    <!-- Core integrity error -->
+    <string name="core_corrupted_title">שגיאת אימות</string>
+    <string name="core_corrupted_message">רכיב אימות הליבה חסר או פגום. ייתכן שהאפליקציה הותקנה באופן לא תקין או עברה שינוי. אנא הסר והתקן מחדש מהמקור הרשמי.</string>
+
+    <!-- Password lockout -->
+    <string name="password_locked_out">חרגת ממספר הניסיונות המותר. נסה שוב בעוד %1$d שניות.</string>
 </resources>

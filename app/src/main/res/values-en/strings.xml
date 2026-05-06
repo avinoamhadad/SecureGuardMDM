@@ -589,4 +589,11 @@
     <string name="hide_launcher_dialog_confirm">Hide</string>
     <string name="hide_launcher_snackbar_hidden">Icon hidden. Reopen via *#*#1818#*#* or Kiosk.</string>
     <string name="hide_launcher_snackbar_shown">The icon will be restored in the app drawer.</string>
+
+    <!-- Core integrity error -->
+    <string name="core_corrupted_title">Validation error</string>
+    <string name="core_corrupted_message">The core validation component is missing or corrupted. The app may have been installed improperly or modified. Please uninstall and reinstall from the official source.</string>
+
+    <!-- Password lockout -->
+    <string name="password_locked_out">Too many failed attempts. Try again in %1$d seconds.</string>
 </resources>
