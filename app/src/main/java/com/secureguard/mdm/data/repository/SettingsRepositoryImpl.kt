@@ -111,6 +111,33 @@ class SettingsRepositoryImpl @Inject constructor(
         preferencesManager.saveBoolean(PreferencesManager.KEY_SHOW_BOOT_TOAST, isEnabled)
     }
 
+    override suspend fun isWatermarkEnabled(): Boolean = withContext(Dispatchers.IO) {
+        preferencesManager.loadBoolean(PreferencesManager.KEY_WATERMARK_ENABLED, false)
+    }
+
+    override suspend fun setWatermarkEnabled(isEnabled: Boolean) = withContext(Dispatchers.IO) {
+        preferencesManager.saveBoolean(PreferencesManager.KEY_WATERMARK_ENABLED, isEnabled)
+    }
+
+    override suspend fun getWatermarkAlphaPercent(): Int = withContext(Dispatchers.IO) {
+        preferencesManager.loadInt(PreferencesManager.KEY_WATERMARK_ALPHA_PERCENT, 45)
+    }
+
+    override suspend fun setWatermarkAlphaPercent(percent: Int) = withContext(Dispatchers.IO) {
+        preferencesManager.saveInt(PreferencesManager.KEY_WATERMARK_ALPHA_PERCENT, percent.coerceIn(10, 100))
+    }
+
+    override suspend fun getWatermarkVariant(): String = withContext(Dispatchers.IO) {
+        preferencesManager.loadString(
+            PreferencesManager.KEY_WATERMARK_VARIANT,
+            PreferencesManager.WATERMARK_VARIANT_FILTERED
+        ) ?: PreferencesManager.WATERMARK_VARIANT_FILTERED
+    }
+
+    override suspend fun setWatermarkVariant(variant: String) = withContext(Dispatchers.IO) {
+        preferencesManager.saveString(PreferencesManager.KEY_WATERMARK_VARIANT, variant)
+    }
+
 
     override suspend fun getCustomFrpIds(): Set<String> = withContext(Dispatchers.IO) {
         preferencesManager.loadStringSet(PreferencesManager.KEY_CUSTOM_FRP_IDS, emptySet())

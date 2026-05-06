@@ -32,3 +32,25 @@ object ShowBootToastSetting : ToggleSetting {
     override val iconRes: Int = 0 // No specific icon
     override val category: SettingCategory = SettingCategory.UI_AND_BEHAVIOR
 }
+
+// Watermark overlay (small image in the top-right of the device home screen / app drawer).
+object WatermarkEnabledSetting : ToggleSetting {
+    override val id: String = "toggle_watermark_enabled"
+    override val titleRes: Int = R.string.settings_item_watermark_enabled
+    override val iconRes: Int = R.drawable.ic_watermark_filtered
+    override val category: SettingCategory = SettingCategory.UI_AND_BEHAVIOR
+}
+
+object WatermarkAlphaAction : com.secureguard.mdm.settingsfeatures.api.ActionSetting {
+    override val id: String = "action_watermark_alpha"
+    override val titleRes: Int = R.string.settings_item_watermark_alpha
+    override val iconRes: Int = 0
+    override val category: SettingCategory = SettingCategory.UI_AND_BEHAVIOR
+}
+
+object WatermarkVariantAction : com.secureguard.mdm.settingsfeatures.api.ActionSetting {
+    override val id: String = "action_watermark_variant"
+    override val titleRes: Int = R.string.settings_item_watermark_variant
+    override val iconRes: Int = 0
+    override val category: SettingCategory = SettingCategory.UI_AND_BEHAVIOR
+}

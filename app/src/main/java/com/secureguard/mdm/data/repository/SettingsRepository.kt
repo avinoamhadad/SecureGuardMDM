@@ -31,6 +31,14 @@ interface SettingsRepository {
     suspend fun isShowBootToastEnabled(): Boolean
     suspend fun setShowBootToastEnabled(isEnabled: Boolean)
 
+    // --- Watermark overlay ---
+    suspend fun isWatermarkEnabled(): Boolean
+    suspend fun setWatermarkEnabled(isEnabled: Boolean)
+    suspend fun getWatermarkAlphaPercent(): Int
+    suspend fun setWatermarkAlphaPercent(percent: Int)
+    suspend fun getWatermarkVariant(): String
+    suspend fun setWatermarkVariant(variant: String)
+
 
     // --- פעולות FRP ---
     suspend fun getCustomFrpIds(): Set<String>

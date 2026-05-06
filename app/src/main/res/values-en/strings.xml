@@ -581,4 +581,19 @@
     <!-- Logs Screen -->
     <string name="logs_title">Event Log</string>
     <string name="settings_navigate_logs">Go to Logs</string>
+
+    <!-- Watermark overlay -->
+    <string name="settings_item_watermark_enabled">Watermark on home screen</string>
+    <string name="settings_item_watermark_alpha">Watermark transparency</string>
+    <string name="watermark_alpha_dialog_title">Watermark transparency</string>
+    <string name="watermark_alpha_dialog_message">Select the transparency level of the watermark.</string>
+    <string name="watermark_alpha_value_format">%1$d%%</string>
+    <string name="watermark_overlay_permission_title">Display over other apps permission</string>
+    <string name="watermark_overlay_permission_message">To show the watermark on the home screen, please grant the permission on the next screen.</string>
+    <string name="watermark_notification_channel_name">Watermark service</string>
+    <string name="watermark_notification_text">Watermark active</string>
+    <string name="settings_item_watermark_variant">Watermark style</string>
+    <string name="watermark_variant_dialog_title">Choose watermark style</string>
+    <string name="watermark_variant_filtered">Filtered (light)</string>
+    <string name="watermark_variant_blocked">Blocked (dark)</string>
 </resources>

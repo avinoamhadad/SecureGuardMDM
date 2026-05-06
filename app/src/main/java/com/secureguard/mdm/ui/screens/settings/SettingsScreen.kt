@@ -34,6 +34,9 @@ import com.secureguard.mdm.settingsfeatures.impl.LockSettingsAction
 import com.secureguard.mdm.settingsfeatures.impl.RemovalOptionsAction
 import com.secureguard.mdm.settingsfeatures.impl.UpdateChannelAction
 import com.secureguard.mdm.settingsfeatures.impl.ExportSettingsAction
+import com.secureguard.mdm.settingsfeatures.impl.WatermarkAlphaAction
+import com.secureguard.mdm.settingsfeatures.impl.WatermarkVariantAction
+import com.secureguard.mdm.data.local.PreferencesManager
 import com.secureguard.mdm.ui.components.InfoDialog
 import com.secureguard.mdm.ui.components.PasswordPromptDialog
 import com.secureguard.mdm.ui.screens.updatesettings.UpdateChannel
@@ -59,6 +62,8 @@ fun SettingsScreen(
     var showLockConfirmationDialog by remember { mutableStateOf(false) }
     var showInfoDialogFor by remember { mutableStateOf<FeatureToggle?>(null) }
     var showUpdateChannelDialog by remember { mutableStateOf(false) }
+    var showWatermarkAlphaDialog by remember { mutableStateOf(false) }
+    var showWatermarkVariantDialog by remember { mutableStateOf(false) }
 
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -161,8 +166,11 @@ fun SettingsScreen(
                         )
                     }
                     items(items = items, key = { it.feature.id }) { itemModel ->
-                        SettingsItemRenderer(uiState, itemModel, onNavigateTo, viewModel) {
-                            // No special action
+                        SettingsItemRenderer(uiState, itemModel, onNavigateTo, viewModel) { featureId ->
+                            when (featureId) {
+                                WatermarkAlphaAction.id -> showWatermarkAlphaDialog = true
+                                WatermarkVariantAction.id -> showWatermarkVariantDialog = true
+                            }
                         }
                     }
                 }
@@ -316,6 +324,154 @@ fun SettingsScreen(
             onDismiss = { showUpdateChannelDialog = false }
         )
     }
+
+    if (showWatermarkAlphaDialog) {
+        WatermarkAlphaDialog(
+            viewModel = viewModel,
+            onDismiss = { showWatermarkAlphaDialog = false }
+        )
+    }
+
+    if (showWatermarkVariantDialog) {
+        WatermarkVariantDialog(
+            viewModel = viewModel,
+            onDismiss = { showWatermarkVariantDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun WatermarkVariantDialog(
+    viewModel: SettingsViewModel,
+    onDismiss: () -> Unit
+) {
+    var current by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(Unit) {
+        if (current == null) current = viewModel.getWatermarkVariant()
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(id = R.string.watermark_variant_dialog_title)) },
+        text = {
+            val selected = current
+            Column {
+                if (selected == null) {
+                    CircularProgressIndicator()
+                } else {
+                    VariantRow(
+                        label = stringResource(id = R.string.watermark_variant_filtered),
+                        iconRes = R.drawable.ic_watermark_filtered,
+                        selected = selected == PreferencesManager.WATERMARK_VARIANT_FILTERED,
+                        onClick = { current = PreferencesManager.WATERMARK_VARIANT_FILTERED }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    VariantRow(
+                        label = stringResource(id = R.string.watermark_variant_blocked),
+                        iconRes = R.drawable.ic_watermark_blocked,
+                        selected = selected == PreferencesManager.WATERMARK_VARIANT_BLOCKED,
+                        onClick = { current = PreferencesManager.WATERMARK_VARIANT_BLOCKED }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                current?.let { viewModel.setWatermarkVariant(it) }
+                onDismiss()
+            }) {
+                Text(stringResource(id = R.string.settings_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = R.string.dialog_button_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun VariantRow(
+    label: String,
+    iconRes: Int,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Spacer(Modifier.width(8.dp))
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(32.dp),
+            tint = Color.Unspecified
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
+private fun WatermarkAlphaDialog(
+    viewModel: SettingsViewModel,
+    onDismiss: () -> Unit
+) {
+    var sliderValue by remember { mutableStateOf<Float?>(null) }
+
+    LaunchedEffect(Unit) {
+        if (sliderValue == null) {
+            sliderValue = viewModel.getWatermarkAlphaPercent().toFloat()
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(id = R.string.watermark_alpha_dialog_title)) },
+        text = {
+            val current = sliderValue
+            Column {
+                Text(stringResource(id = R.string.watermark_alpha_dialog_message))
+                Spacer(Modifier.height(16.dp))
+                if (current == null) {
+                    CircularProgressIndicator()
+                } else {
+                    Text(
+                        text = stringResource(
+                            id = R.string.watermark_alpha_value_format,
+                            current.toInt()
+                        ),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Slider(
+                        value = current,
+                        onValueChange = { sliderValue = it },
+                        valueRange = 10f..100f,
+                        steps = 8
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                sliderValue?.toInt()?.let { viewModel.setWatermarkAlphaPercent(it) }
+                onDismiss()
+            }) {
+                Text(stringResource(id = R.string.settings_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = R.string.dialog_button_cancel))
+            }
+        }
+    )
 }
 
 /**

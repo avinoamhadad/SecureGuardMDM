@@ -60,5 +60,12 @@ class PreferencesManager @Inject constructor(internal val prefs: SharedPreferenc
         const val KEY_ASTORE_SAVE_TO_DOWNLOADS = "astore_save_to_downloads"
         const val KEY_ASTORE_AUTO_INSTALL = "astore_auto_install"
         const val KEY_ASTORE_PREVENT_DOUBLE_TAP = "astore_prevent_double_tap"
+
+        // --- Watermark overlay ---
+        const val KEY_WATERMARK_ENABLED = "watermark_enabled"
+        const val KEY_WATERMARK_ALPHA_PERCENT = "watermark_alpha_percent"
+        const val KEY_WATERMARK_VARIANT = "watermark_variant" // "filtered" | "blocked"
+        const val WATERMARK_VARIANT_FILTERED = "filtered"
+        const val WATERMARK_VARIANT_BLOCKED = "blocked"
     }
 }
