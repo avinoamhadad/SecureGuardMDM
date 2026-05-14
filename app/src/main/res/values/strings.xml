@@ -697,4 +697,19 @@
 
     <!-- Password lockout -->
     <string name="password_locked_out">חרגת ממספר הניסיונות המותר. נסה שוב בעוד %1$d שניות.</string>
+
+    <!-- Watermark overlay -->
+    <string name="settings_item_watermark_enabled">סימן מים על מסך הבית</string>
+    <string name="settings_item_watermark_alpha">שקיפות סימן מים</string>
+    <string name="watermark_alpha_dialog_title">שקיפות סימן מים</string>
+    <string name="watermark_alpha_dialog_message">בחר את רמת השקיפות של סימן המים.</string>
+    <string name="watermark_alpha_value_format">%1$d%%</string>
+    <string name="watermark_overlay_permission_title">הרשאת חלון על אפליקציות אחרות</string>
+    <string name="watermark_overlay_permission_message">כדי להציג סימן מים על מסך הבית, יש לאשר את ההרשאה במסך הבא.</string>
+    <string name="watermark_notification_channel_name">שירות סימן מים</string>
+    <string name="watermark_notification_text">סימן מים פעיל</string>
+    <string name="settings_item_watermark_variant">סוג סימן מים</string>
+    <string name="watermark_variant_dialog_title">בחר סוג סימן מים</string>
+    <string name="watermark_variant_filtered">מסונן (בהיר)</string>
+    <string name="watermark_variant_blocked">חסום (כהה)</string>
 </resources>

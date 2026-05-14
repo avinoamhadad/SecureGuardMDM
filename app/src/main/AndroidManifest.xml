@@ -20,6 +20,7 @@
     <uses-permission android:name="android.permission.RECEIVE_DEVICE_OWNER_OWNERSHIP" />
     <uses-permission android:name="android.permission.MANAGE_PROFILE_AND_DEVICE_OWNERS"/>
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <!-- Custom signature-level permission: only apps signed with the same key
          (i.e. only A Bloq itself) can broadcast preset configurations. -->
@@ -220,6 +221,16 @@
             android:exported="false"
             android:foregroundServiceType="specialUse"
             tools:targetApi="UPSIDE_DOWN_CAKE" />
+
+        <service
+            android:name=".services.WatermarkOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:targetApi="UPSIDE_DOWN_CAKE">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_CATEGORY"
+                android:value="watermark_overlay" />
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

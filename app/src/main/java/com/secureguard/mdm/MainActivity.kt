@@ -57,6 +57,19 @@ class MainActivity : ComponentActivity() {
         AppLogger.d("MainActivity", "Returned from WRITE_SETTINGS screen.")
     }
 
+    private val overlayPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
+            Log.d("MainActivity", "Overlay permission granted, starting watermark service.")
+            lifecycleScope.launch {
+                if (settingsRepository.isWatermarkEnabled()) {
+                    com.secureguard.mdm.services.WatermarkOverlayService.start(this@MainActivity)
+                }
+            }
+        }
+    }
+
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
@@ -154,6 +167,27 @@ class MainActivity : ComponentActivity() {
                     Uri.parse("package:$packageName")
                 )
                 writeSettingsLauncher.launch(intent)
+            }
+        }
+        maybeRequestOverlayPermission()
+    }
+
+    private fun maybeRequestOverlayPermission() {
+        lifecycleScope.launch {
+            if (!settingsRepository.isWatermarkEnabled()) return@launch
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return@launch
+            if (Settings.canDrawOverlays(this@MainActivity)) {
+                com.secureguard.mdm.services.WatermarkOverlayService.start(this@MainActivity)
+                return@launch
+            }
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            try {
+                overlayPermissionLauncher.launch(intent)
+            } catch (e: Exception) {
+                Log.w("MainActivity", "Failed to launch overlay permission settings", e)
             }
         }
     }

@@ -23,6 +23,9 @@ object SettingsRegistry {
         ToggleContactEmailSetting,
         ShowBootToastSetting,
         HideLauncherIconSetting,
+        WatermarkEnabledSetting,
+        WatermarkVariantAction,
+        WatermarkAlphaAction,
 
         // קטגוריית פעולות מתקדמות
         UpdateChannelAction,

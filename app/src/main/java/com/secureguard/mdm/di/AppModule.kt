@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.secureguard.mdm.boot.impl.NetfreeWatchdogBootTask
 import com.secureguard.mdm.boot.impl.ShowToastOnBootTask
+import com.secureguard.mdm.boot.impl.WatermarkBootTask
 import com.secureguard.mdm.data.db.AppDatabase
 import com.secureguard.mdm.data.db.BlockedAppCacheDao
 import com.secureguard.mdm.data.local.PreferencesManager
@@ -100,6 +101,15 @@ object AppModule {
         @ApplicationContext context: Context
     ): NetfreeWatchdogBootTask {
         return NetfreeWatchdogBootTask(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWatermarkBootTask(
+        @ApplicationContext context: Context,
+        settingsRepository: SettingsRepository
+    ): WatermarkBootTask {
+        return WatermarkBootTask(context, settingsRepository)
     }
 
     @Provides

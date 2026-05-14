@@ -94,6 +94,29 @@ class SettingsViewModel @Inject constructor(
         loadInitialState()
     }
 
+    suspend fun getWatermarkAlphaPercent(): Int = settingsRepository.getWatermarkAlphaPercent()
+
+    fun setWatermarkAlphaPercent(percent: Int) {
+        viewModelScope.launch {
+            settingsRepository.setWatermarkAlphaPercent(percent)
+            // If service is running, refresh it so the new alpha takes effect immediately.
+            if (settingsRepository.isWatermarkEnabled()) {
+                com.secureguard.mdm.services.WatermarkOverlayService.start(context)
+            }
+        }
+    }
+
+    suspend fun getWatermarkVariant(): String = settingsRepository.getWatermarkVariant()
+
+    fun setWatermarkVariant(variant: String) {
+        viewModelScope.launch {
+            settingsRepository.setWatermarkVariant(variant)
+            if (settingsRepository.isWatermarkEnabled()) {
+                com.secureguard.mdm.services.WatermarkOverlayService.start(context)
+            }
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.P)
     fun onEvent(event: SettingsEvent) {
         when (event) {
@@ -180,6 +203,7 @@ class SettingsViewModel @Inject constructor(
                         ShowBootToastSetting.id -> settingsRepository.isShowBootToastEnabled()
                         AstoreToggleSetting.id -> settingsRepository.isAstoreEnabled()
                         HideLauncherIconSetting.id -> settingsRepository.isLauncherIconHidden()
+                        WatermarkEnabledSetting.id -> settingsRepository.isWatermarkEnabled()
                         else -> false
                     }
                 } else false
@@ -255,6 +279,14 @@ class SettingsViewModel @Inject constructor(
                                     context.getString(R.string.hide_launcher_snackbar_hidden)
                                 } else {
                                     context.getString(R.string.hide_launcher_snackbar_shown)
+                                }
+                            }
+                            WatermarkEnabledSetting.id -> {
+                                settingsRepository.setWatermarkEnabled(model.isChecked)
+                                if (model.isChecked) {
+                                    com.secureguard.mdm.services.WatermarkOverlayService.start(context)
+                                } else {
+                                    com.secureguard.mdm.services.WatermarkOverlayService.stop(context)
                                 }
                             }
                         }

@@ -69,5 +69,12 @@ class PreferencesManager @Inject constructor(internal val prefs: SharedPreferenc
         // --- Password lockout (anti brute-force) ---
         const val KEY_PASSWORD_FAILED_ATTEMPTS = "password_failed_attempts"
         const val KEY_PASSWORD_LAST_FAILURE_AT = "password_last_failure_at"
+
+        // --- Watermark overlay ---
+        const val KEY_WATERMARK_ENABLED = "watermark_enabled"
+        const val KEY_WATERMARK_ALPHA_PERCENT = "watermark_alpha_percent"
+        const val KEY_WATERMARK_VARIANT = "watermark_variant" // "filtered" | "blocked"
+        const val WATERMARK_VARIANT_FILTERED = "filtered"
+        const val WATERMARK_VARIANT_BLOCKED = "blocked"
     }
 }
