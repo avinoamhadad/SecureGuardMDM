@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-            Log.d("MainActivity", "Overlay permission granted, starting watermark service.")
+            AppLogger.d("MainActivity", "Overlay permission granted, starting watermark service.")
             lifecycleScope.launch {
                 if (settingsRepository.isWatermarkEnabled()) {
                     com.secureguard.mdm.services.WatermarkOverlayService.start(this@MainActivity)
@@ -187,7 +187,7 @@ class MainActivity : ComponentActivity() {
             try {
                 overlayPermissionLauncher.launch(intent)
             } catch (e: Exception) {
-                Log.w("MainActivity", "Failed to launch overlay permission settings", e)
+                AppLogger.w("MainActivity", "Failed to launch overlay permission settings", e)
             }
         }
     }
